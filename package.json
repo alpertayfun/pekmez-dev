@@ -1,0 +1,41 @@
+{
+  "name": "easyserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "chalk": "^4.1.0",
+    "commander": "^6.1.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "keypress": "^0.2.1",
+    "md5": "^2.3.0",
+    "ncp": "^2.0.0",
+    "serve-favicon": "^2.5.0",
+    "socket.io": "^2.3.0",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "serve-favicon": "^2.5.0",
+    "socket.io": "^2.3.0"
+  },
+  "scripts": {
+    "test": "node app.js"
+  },
+  "keywords": [
+    "easy",
+    "server",
+    "easyserver"
+  ],
+  "author": "alper tayfun",
+  "license": "ISC"
+}

@@ -26,7 +26,11 @@ module.exports = {
     try {
       if (fs.existsSync("./config/settings.json")) {
         if(settings){
-            log(chalk.green(`        Pekmez Simple Web Server Inıt : `+ settings.port));
+            if(settings.secure.enable){
+              log(chalk.green(`        Pekmez Simple Web Server Inıt : `+ settings.securePort));
+            }else{
+              log(chalk.green(`        Pekmez Simple Web Server Inıt : `+ settings.port));
+            }
         }else{
           log(chalk.red("Wrong Json File!"));
         }
@@ -54,6 +58,7 @@ module.exports = {
             var session = require('express-session');
             app.use(session({secret:settings.secret,resave:false,saveUninitialized:true,cookie: { maxAge: expiryDate.getTime() ,secure: true }}));
           }
+          
           app.use(express.static(settings.publicDirectory));
           //app.use('/static', express.static('node_modules'));
           app.use(favicon(path.join(__dirname, settings.publicDirectory, 'favicon.ico')));
@@ -98,9 +103,17 @@ module.exports = {
           }
         
           app.use( customHeaders );
-          
-    
-          var server = require('http').createServer(app);
+          var port;
+          if(settings.secure.enable){
+            var server = require('https').createServer({
+              key: fs.readFileSync(settings.secure.key),
+              cert: fs.readFileSync(settings.secure.cert)
+            },app);
+            port = settings.securePort;
+          }else{
+            var server = require('http').createServer(app);
+            port = settings.port;
+          }
           var io = require('socket.io')(server);
     
          
@@ -123,9 +136,9 @@ module.exports = {
           
           app.use("/", router);
 
-          server.listen(settings.port,function(){
+          server.listen(port,function(){
             log(chalk.green("/* ………………………………………………………………………………… */"));
-            log(chalk.green(`        Server started! port: `+ settings.port));
+            log(chalk.green(`        Server started! port: `+ port));
             log(`
             CPU: ${chalk.red(os.cpus().length)}
             RAM: ${chalk.green(commons.bytesToSize(os.freemem()))}

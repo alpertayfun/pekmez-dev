@@ -1,5 +1,11 @@
 {
+  "secure":{
+    "enable":true,
+    "cert":"./ssl/server.cert",
+    "key":"./ssl/server.key"
+  },
   "port": "7777",
+  "securePort": "7773",
   "publicDirectory":"assets",
   "htmlEngine":"ejs",
   "debug":true,

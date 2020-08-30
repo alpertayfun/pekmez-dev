@@ -34,10 +34,10 @@ module.exports = {
           sequelize
           .authenticate()
           .then(() => {
-            console.log('Connection has been established successfully.');
+            log(chalk.green(`Database Worker : Connection has been established successfully.`));
           })
           .catch(err => {
-            console.error('Unable to connect to the database:', err);
+            log(chalk.red(`Database Worker : Unable to connect to the database: `+ err));
             process.exit();
           });
         }

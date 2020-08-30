@@ -19,10 +19,30 @@ const log = console.log;
 var path = require('path');
 var os = require('os');
 var md5 = require('md5');
+const { Sequelize, Op, Model, DataTypes } = require("sequelize");
+const mongoose = require('mongoose');
+
 
 module.exports = {
 
   init: function(){
+    function checkDb() {
+      if(settings.dbConnection.enable){
+        //checking database first
+        if(settings.dbConnection.dbType=="sqlite"){
+          const sequelize = new Sequelize('sqlite::memory:');
+          sequelize
+          .authenticate()
+          .then(() => {
+            console.log('Connection has been established successfully.');
+          })
+          .catch(err => {
+            console.error('Unable to connect to the database:', err);
+            process.exit();
+          });
+        }
+      }
+    }
     try {
       if (fs.existsSync("./config/settings.json")) {
         if(settings){
@@ -31,6 +51,7 @@ module.exports = {
             }else{
               log(chalk.green(`        Pekmez Simple Web Server Inıt : `+ settings.port));
             }
+            checkDb();
         }else{
           log(chalk.red("Wrong Json File!"));
         }

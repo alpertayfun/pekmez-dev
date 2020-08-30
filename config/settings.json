@@ -17,5 +17,10 @@
     "enable":true,
     "domain":"*",
     "method":"GET,HEAD,PUT,PATCH,POST,DELETE"
+  },
+  "dbConnection":{
+    "enable":true,
+    "dbType":"sqlite",
+    "connectionURI": "sqlite::memory:"
   }
 }

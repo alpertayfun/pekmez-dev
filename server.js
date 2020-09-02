@@ -21,7 +21,7 @@ var os = require('os');
 var md5 = require('md5');
 const { Sequelize, Op, Model, DataTypes } = require("sequelize");
 const mongoose = require('mongoose');
-
+var pekmezVersion = "1.0.0";
 
 module.exports = {
 
@@ -153,14 +153,19 @@ module.exports = {
             }, 500);
           });
 
-          const testFolder = './controller/api/';
+          const controllerDir = './controller/api/';
 
-          fs.readdirSync(testFolder).forEach(file => {
-            var fileExt = file.split(".");
-            if(fileExt[1]=="js"){
-              require('./controller/api/' + file)(router);
-            }
-          });
+          // fs.readdirSync(controllerDir).forEach(file => {
+          //   var fileExt = file.split(".");
+          //   if(fileExt[1]=="js"){
+          //     require(controllerDir + file)(router);
+          //   }
+          // });
+          var apiController = require('./controller/api/apiController');
+
+          router.get("/api/loginUser",apiController.loginUser);
+          router.get("/api/new",apiController.new);
+          router.get("/api/",apiController.index);
           
           app.use("/", router);
 
@@ -183,13 +188,30 @@ module.exports = {
                 if(socket.handshake.query){
                   if(socket.handshake.query.hasOwnProperty("type")){
                     if(socket.handshake.query.type=="browser"){
-                      if(socket.handshake.headers.hasOwnProperty("x-clientid")){
-                          if(settings.debug) console.log(socket.handshake.headers["x-clientid"]);
+                      if(socket.handshake.query.hasOwnProperty("version")){
+                        if(socket.handshake.query.version==pekmezVersion){
+                          //success version 
+                          if(socket.handshake.headers.hasOwnProperty("x-clientid")){
+                              if(settings.debug) console.log(socket.handshake.headers["x-clientid"]);
+                          }else{
+                            io.sockets.connected[socket.id].disconnect();
+                          }
+                        }else{
+                          io.sockets.connected[socket.id].disconnect();
+                        }
                       }else{
                         io.sockets.connected[socket.id].disconnect();
                       }
                     }else if(socket.handshake.query.type=="java" || socket.handshake.query.type=="ios" || socket.handshake.query.type=="other"){
-
+                      if(socket.handshake.query.version==pekmezVersion){
+                        if(socket.handshake.query.version==pekmezVersion){
+                          //success version 
+                        }else{
+                          io.sockets.connected[socket.id].disconnect();
+                        }
+                      }else{
+                        io.sockets.connected[socket.id].disconnect();
+                      }
                     }else{
                       io.sockets.connected[socket.id].disconnect();
                     }
@@ -199,7 +221,6 @@ module.exports = {
                 }else{
                   io.sockets.connected[socket.id].disconnect();
                 }
-                
               }else{
                 io.sockets.connected[socket.id].disconnect();
               }
@@ -210,7 +231,47 @@ module.exports = {
             socket.on('disconnect', function (socket) {
               if(settings.debug) log(chalk.yellowBright("socket disconnected"));
             });
+
+            socket.on('post', function (data) {
+              if(settings.debug) console.log(data);
+              if(data.hasOwnProperty("url") && data.hasOwnProperty("method")){
+                if(data.url && data.method){
+                  var as = require("./controller/api/"+data.url+"Controller");
+                  socket.send = function(data){
+                    return data;
+                  };
+                  console.log(socket);
+                  data.data = as.new(io,socket);
+                  io.to(socket.id).emit("post"+data.url,data);
+                }else{
+                  io.sockets.connected[socket.id].disconnect();
+                }
+              }else{
+                io.sockets.connected[socket.id].disconnect();
+              }
+            });
+
+            socket.on('get', function (data) {
+              if(settings.debug) console.log(data);
+              if(data.hasOwnProperty("url") && data.hasOwnProperty("method")){
+                if(data.url && data.method){
+                  var as = require("./controller/api/"+data.url+"Controller");
+                  socket.send = function(data){
+                    return data;
+                  };
+                  console.log(socket);
+                  data.data = as.new(io,socket);
+                  io.to(socket.id).emit("post"+data.url,data);
+                }else{
+                  io.sockets.connected[socket.id].disconnect();
+                }
+              }else{
+                io.sockets.connected[socket.id].disconnect();
+              }
+            });
           });
+
+
           
           io.use((socket, next) => {
             let clientId = socket.handshake.headers['x-clientid'];

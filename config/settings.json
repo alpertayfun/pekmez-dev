@@ -1,6 +1,6 @@
 {
   "secure":{
-    "enable":true,
+    "enable":false,
     "cert":"./ssl/server.cert",
     "key":"./ssl/server.key"
   },
@@ -8,6 +8,7 @@
   "securePort": "7773",
   "publicDirectory":"assets",
   "htmlEngine":"ejs",
+  "compression":true,
   "debug":true,
   "session":true,
   "secret":"9161bcb95e58da953276007ff37bd175",

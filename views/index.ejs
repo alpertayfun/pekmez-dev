@@ -225,9 +225,18 @@
     <script src="/js/dependencies/socket.io.js"></script>
     <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js">  </script> -->
     <script>
+      var reconnectAttemp = 0;
       document.getElementById("app").innerHTML = "Session Id : " + getCookie("pekmezsession");
-      const socket = io('http://localhost:7777',{transportOptions: {polling: {extraHeaders: {'x-clientid': getCookie("pekmezsession")}}}, reconnection : true,autoConnect :true,query:"newtest"});
+      const socket = io('http://localhost:7777?type=browser&version=1.0.0',{transportOptions: {polling: {extraHeaders: {'x-clientid': getCookie("pekmezsession")}}}, reconnection : true,autoConnect :true,query:"newtest"});
       socket.on('connect', () => {
+      });
+      socket.on('reconnect', () => {
+        reconnectAttemp = 0;
+        console.log("reconnected"); 
+      });
+      socket.on('reconnect_attempt', () => {
+        reconnectAttemp++;
+        console.log("reconnected attemp "+ reconnectAttemp); 
       });
       socket.on('greetings', function (data) {
         console.log(data);

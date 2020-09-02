@@ -76,6 +76,8 @@ module.exports = {
           const router = express.Router();
           var app = express();
           var expiryDate = new Date(Date.now() + 60 * 60 * 1000);
+          var compression = require('compression');
+
           if(settings.session){
             var session = require('express-session');
             app.use(session({secret:settings.secret,resave:false,saveUninitialized:true,cookie: { maxAge: expiryDate.getTime() ,secure: true }}));
@@ -92,6 +94,9 @@ module.exports = {
           app.use(methodOverride());
           app.engine('.ejs', ejs.__express);
           app.set('views',__dirname+'/views');
+          if(settings.compression){
+            app.use(compression());
+          }
           if(settings.cors){
             if(settings.cors.enable){
               app.use(cors({
@@ -143,7 +148,7 @@ module.exports = {
     
           router.get("/", function(req,res) {
             res.render('./index.ejs');
-            setTimeout(function(){ 
+            setTimeout(function(){
               io.emit("greetings", "Welcome Pekmez Simple Web Server");
             }, 500);
           });
@@ -172,6 +177,36 @@ module.exports = {
     
           io.sockets.on('connection', function (socket) {
             if(settings.debug) log(chalk.greenBright("socket connected"));
+            if(settings.debug) console.log(socket.handshake.query);
+            if(socket.handshake){
+              if(socket.handshake.headers){
+                if(socket.handshake.query){
+                  if(socket.handshake.query.hasOwnProperty("type")){
+                    if(socket.handshake.query.type=="browser"){
+                      if(socket.handshake.headers.hasOwnProperty("x-clientid")){
+                          if(settings.debug) console.log(socket.handshake.headers["x-clientid"]);
+                      }else{
+                        io.sockets.connected[socket.id].disconnect();
+                      }
+                    }else if(socket.handshake.query.type=="java" || socket.handshake.query.type=="ios" || socket.handshake.query.type=="other"){
+
+                    }else{
+                      io.sockets.connected[socket.id].disconnect();
+                    }
+                  }else{
+                    io.sockets.connected[socket.id].disconnect();
+                  }
+                }else{
+                  io.sockets.connected[socket.id].disconnect();
+                }
+                
+              }else{
+                io.sockets.connected[socket.id].disconnect();
+              }
+            }else{
+              io.sockets.connected[socket.id].disconnect();
+            }
+
             socket.on('disconnect', function (socket) {
               if(settings.debug) log(chalk.yellowBright("socket disconnected"));
             });

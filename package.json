@@ -16,6 +16,7 @@
     "jsonwebtoken": "^8.5.1",
     "keypress": "^0.2.1",
     "md5": "^2.3.0",
+    "method-override": "^3.0.0",
     "mongoose": "^5.10.2",
     "ncp": "^2.0.0",
     "sequelize": "^6.3.4",

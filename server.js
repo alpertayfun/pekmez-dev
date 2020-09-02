@@ -70,6 +70,7 @@ module.exports = {
           var ejs = require('ejs');
           var cookieParser = require('cookie-parser');
           var bodyParser = require('body-parser');
+          var methodOverride = require('method-override');
           var favicon = require('serve-favicon');
           var cors = require('cors');
           const router = express.Router();
@@ -88,6 +89,7 @@ module.exports = {
           app.use(express.json());
           app.use(bodyParser.urlencoded({extended:true}));
           app.use(bodyParser.json());
+          app.use(methodOverride());
           app.engine('.ejs', ejs.__express);
           app.set('views',__dirname+'/views');
           if(settings.cors){

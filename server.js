@@ -154,18 +154,22 @@ module.exports = {
           });
 
           const controllerDir = './controller/api/';
+          var fileController = [];
 
-          // fs.readdirSync(controllerDir).forEach(file => {
-          //   var fileExt = file.split(".");
-          //   if(fileExt[1]=="js"){
-          //     require(controllerDir + file)(router);
-          //   }
-          // });
-          var apiController = require('./controller/api/apiController');
+          fs.readdirSync(controllerDir).forEach(file => {
+             var fileExt = file.split(".");
+             if(fileExt[1]=="js"){
+               fileController.push({fileName:file});
+             }
+          });
 
-          router.get("/api/loginUser",apiController.loginUser);
-          router.get("/api/new",apiController.new);
-          router.get("/api/",apiController.index);
+          fileController.forEach(f => {
+            var controller = require(controllerDir + f.fileName);
+            var keys = Object.keys(controller);
+            keys.forEach(a => {
+              router.get("/"+f.fileName.replace("Controller","").replace(".js","")+"/"+a,controller[a]);
+            });
+          });
           
           app.use("/", router);
 
@@ -240,7 +244,7 @@ module.exports = {
                   socket.send = function(data){
                     return data;
                   };
-                  console.log(socket);
+                  io.isSocket = true;
                   data.data = as.new(io,socket);
                   io.to(socket.id).emit("post"+data.url,data);
                 }else{
@@ -259,7 +263,7 @@ module.exports = {
                   socket.send = function(data){
                     return data;
                   };
-                  console.log(socket);
+                  io.isSocket = true;
                   data.data = as.new(io,socket);
                   io.to(socket.id).emit("post"+data.url,data);
                 }else{

@@ -12,8 +12,14 @@ exports.loginUser = function(req, res) {
 }
 
 exports.new = function(req, res) {
-    var token = jwToken.issue({test:"asdsad"});
-    return res.send({token:token});
+    if(req.isSocket){
+        var token = jwToken.issue({test:"asdsad"});
+        return res.send({token:token,socket:req.isSocket});
+    }else{
+        var token = jwToken.issue({test:"asdsad"});
+        return res.send({token:token,socket:false});
+    
+    }
 }
 
 exports.index = function(req, res) {

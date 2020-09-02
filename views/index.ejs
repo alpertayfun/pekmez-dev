@@ -228,24 +228,39 @@
 
       var socket;
       var pekmez = {
-        connection: function(url){
+        init: function(){
+          console.log("Pekmez Socket Started");
+        },
+        connection: function(url,options){
           var reconnectAttemp = 0;
           document.getElementById("app").innerHTML = "Session Id : " + getCookie("pekmezsession");
-          socket = io(url+'?type=browser&version=1.0.0',{transportOptions: {polling: {extraHeaders: {'x-clientid': getCookie("pekmezsession")}}}, reconnection : true,autoConnect :true,query:"newtest"});
-          
+          if(options){
+            socket = io(url+'?type=browser&version=1.0.0',options);
+          }else{
+            socket = io(url+'?type=browser&version=1.0.0',{transportOptions: {polling: {extraHeaders: {'x-clientid': getCookie("pekmezsession")}}}, reconnection : true,autoConnect :true,query:"newtest"});
+          }
           socket.on('connect', () => {
           });
-          
+          socket.on('connect_error', () => {
+            console.log("Connection Error"); 
+          });
+          socket.on('reconnect_error', () => {
+            console.log("Reconnection Error"); 
+          });
+          socket.on('reconnect_failed', () => {
+            console.log("Reconnection Failed"); 
+          });
+          socket.on('connect_timeout', () => {
+            console.log("Connection Timeout"); 
+          });
           socket.on('reconnect', () => {
             reconnectAttemp = 0;
             console.log("reconnected"); 
           });
-
           socket.on('reconnect_attempt', () => {
             reconnectAttemp++;
             console.log("reconnected attemp "+ reconnectAttemp); 
           });
-          
           socket.on('greetings', function (data) {
             console.log(data);
           });    
@@ -268,7 +283,8 @@
         }
       }
 
-      pekmez.connection("http://localhost:7777");
+      pekmez.init();
+      pekmez.connection("http://localhost:7777",{transportOptions: {polling: {extraHeaders: {'x-clientid': getCookie("pekmezsession")}}}, reconnection : true,autoConnect :true,query:"newtest"});
       pekmez.post("/new",{"userId":1},function(data){
         console.log(data);
       });

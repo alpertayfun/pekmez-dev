@@ -14,7 +14,7 @@ This repo is simple web server using express-js. This is not stable version.
 
 ### Why ?
 
-- lightToken is simple. Open source. 
+- Pekmez is simple. Open source. 
 - MVC supported.
 - ORM supported.
 - Quick installion. Usage Simple.

@@ -1,15 +1,12 @@
-## Pekmez Simple Web Server Dev Repo
+## Pekmez Simple Web Application Server Dev Repo
 
-
-Simple Web Server.
-
+Simple Web Application Server
 
 ### Description
 
-
 Pekmez Meaning : (Turkish: pekmez, from Oghuz Turkic bekmes [1][2], Azerbaijani: bəkməz/doşab) is a molasses-like syrup obtained after condensing juices of fruit must, especially grape by boiling it with a coagulant agent like wood ashes or ground carob seeds. It is used as a syrup or mixed with tahini for breakfast. In Azerbaijan, pekmez is also mixed with natural yogurt and consumed as a refreshment during summer time.
 
-This repo is simple web server using express-js. This is not stable version. 
+This repo is simple web application server using express-js. This is not stable version. 
 
 
 ### Why ?

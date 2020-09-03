@@ -158,13 +158,11 @@ module.exports = {
 
           //adding sub dir into controller side
           var dirsa = commons.getDirectories(controllerDir);
-          if(settings.debug) console.log(dirsa);
           if(dirsa){
             var subDir = [];
             dirsa.forEach(a => {
               subDir.push({saltName:a.replace(/\/\//g, "/").replace(/\\/gi,"").replace("controllerapi",""),dirName: controllerDir +""+ a.replace(/\/\//g, "/").replace(/\\/gi,"").replace("controllerapi","")});
             });
-            console.log(subDir);
             subDir.forEach(b => {
               var fileController = [];
               fs.readdirSync(b.dirName+"/").forEach(file => {
@@ -230,7 +228,6 @@ module.exports = {
           io.sockets.on('connection', function (socket) {
             if(settings.debug) log(chalk.greenBright("socket connected"));
             if(settings.debug) console.log(socket.handshake.query);
-            if(settings.debug) console.log(socket.handshake.session);
             if(socket.handshake){
               if(socket.handshake.headers){
                 if(socket.handshake.query){

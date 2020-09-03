@@ -5,14 +5,14 @@
 */
 
 var pekmez = require("./server");
-var settings = require('./config/settings.json');
+var settings = require('./config/settings.js');
 var cluster = require('cluster');
 const chalk = require('chalk');
 const log = console.log;
 const fs = require('fs');
 
 try {
-    if (fs.existsSync("./config/settings.json")) {
+    if (fs.existsSync("./config/settings.js")) {
       if(settings){
             if(settings.cluster){
                 if (cluster.isMaster) {
@@ -29,10 +29,10 @@ try {
                 pekmez.start();
             }
       }else{
-        log(chalk.red("Wrong Json File!"));
+        log(chalk.red("Wrong Js File!"));
       }
     }else{
-      log(chalk.red("Settings Json File Not Found!"));
+      log(chalk.red("Settings Js File Not Found!"));
     }
   } catch(err) {
     log(chalk.red(err));

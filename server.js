@@ -7,7 +7,7 @@
 
 const process = require('process');
 const fs = require('fs');
-var settings = require('./config/settings.json');
+var settings = require('./config/settings.js');
 var signalExit = 0;
 var keypress = require('keypress')
   , tty = require('tty');
@@ -22,6 +22,19 @@ var md5 = require('md5');
 const { Sequelize, Op, Model, DataTypes } = require("sequelize");
 const mongoose = require('mongoose');
 var pekmezVersion = "1.0.0";
+var express = require('express');
+var app = express();
+var ejs = require('ejs');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var methodOverride = require('method-override');
+var favicon = require('serve-favicon');
+var cors = require('cors');
+const router = express.Router();
+var compression = require('compression');
+var expiryDate = new Date(Date.now() + 60 * 60 * 1000);
+var server,io;
+var session , sharedsession;
 
 module.exports = {
 
@@ -44,7 +57,7 @@ module.exports = {
       }
     }
     try {
-      if (fs.existsSync("./config/settings.json")) {
+      if (fs.existsSync("./config/settings.js")) {
         if(settings){
             if(settings.secure.enable){
               log(chalk.green(`        Pekmez Simple Web Server Inıt : `+ settings.securePort));
@@ -53,10 +66,10 @@ module.exports = {
             }
             checkDb();
         }else{
-          log(chalk.red("Wrong Json File!"));
+          log(chalk.red("Wrong Js File!"));
         }
       }else{
-        log(chalk.red("Settings Json File Not Found!"));
+        log(chalk.red("Settings Js File Not Found!"));
       }
     } catch(err) {
       log(chalk.red(err));
@@ -64,23 +77,13 @@ module.exports = {
   },
   start: function(){
     try {
-      if (fs.existsSync("./config/settings.json")) {
+      if (fs.existsSync("./config/settings.js")) {
         if(settings){
-          var express = require('express');
-          var ejs = require('ejs');
-          var cookieParser = require('cookie-parser');
-          var bodyParser = require('body-parser');
-          var methodOverride = require('method-override');
-          var favicon = require('serve-favicon');
-          var cors = require('cors');
-          const router = express.Router();
-          var app = express();
-          var expiryDate = new Date(Date.now() + 60 * 60 * 1000);
-          var compression = require('compression');
-
           if(settings.session){
-            var session = require('express-session');
-            app.use(session({secret:settings.secret,resave:false,saveUninitialized:true,cookie: { maxAge: expiryDate.getTime() ,secure: true }}));
+            session = require('express-session');
+            app.use(session({secret:settings.secret,resave:true,saveUninitialized:true,cookie: { maxAge: expiryDate.getTime() ,secure: true }}));
+            sharedsession = require("express-socket.io-session");
+
           }
           
           app.use(express.static(settings.publicDirectory));
@@ -94,9 +97,7 @@ module.exports = {
           app.use(methodOverride());
           app.engine('.ejs', ejs.__express);
           app.set('views',__dirname+'/views');
-          if(settings.compression){
-            app.use(compression());
-          }
+          if(settings.compression){ app.use(compression()); }
           if(settings.cors){
             if(settings.cors.enable){
               app.use(cors({
@@ -107,7 +108,6 @@ module.exports = {
               }));
             }
           }
-          
 
           function customHeaders( req, res, next ){
             app.disable('x-powered-by');
@@ -133,28 +133,61 @@ module.exports = {
           app.use( customHeaders );
           var port;
           if(settings.secure.enable){
-            var server = require('https').createServer({
+            server = require('https').createServer({
               key: fs.readFileSync(settings.secure.key),
               cert: fs.readFileSync(settings.secure.cert)
             },app);
             port = settings.securePort;
           }else{
-            var server = require('http').createServer(app);
+            server = require('http').createServer(app);
             port = settings.port;
           }
-          var io = require('socket.io')(server);
-    
-         
+
+          io = require('socket.io')(server);
     
           router.get("/", function(req,res) {
             res.render('./index.ejs');
             setTimeout(function(){
+              console.log("greetings");
               io.emit("greetings", "Welcome Pekmez Simple Web Server");
             }, 500);
           });
 
           const controllerDir = './controller/api/';
           var fileController = [];
+
+          //adding sub dir into controller side
+          var dirsa = commons.getDirectories(controllerDir);
+          if(settings.debug) console.log(dirsa);
+          if(dirsa){
+            var subDir = [];
+            dirsa.forEach(a => {
+              subDir.push({saltName:a.replace(/\/\//g, "/").replace(/\\/gi,"").replace("controllerapi",""),dirName: controllerDir +""+ a.replace(/\/\//g, "/").replace(/\\/gi,"").replace("controllerapi","")});
+            });
+            console.log(subDir);
+            subDir.forEach(b => {
+              var fileController = [];
+              fs.readdirSync(b.dirName+"/").forEach(file => {
+                  var fileExt = file.split(".");
+                  if(fileExt[1]=="js"){
+                    fileController.push({fileName:file});
+                  }
+              });
+              fileController.forEach(f => {
+                var controller = require(b.dirName +"/" + f.fileName);
+                var keys = Object.keys(controller);
+                keys.forEach(a => {
+                  if(a=="index"){
+                    router.get("/"+b.saltName+"/"+f.fileName.replace("Controller","").replace(".js","")+"/",controller[a]);
+                    router.post("/"+b.saltName+"/"+f.fileName.replace("Controller","").replace(".js","")+"/",controller[a]);
+                  }else{
+                    router.get("/"+b.saltName+"/"+f.fileName.replace("Controller","").replace(".js","")+"/"+a,controller[a]);
+                    router.post("/"+b.saltName+"/"+f.fileName.replace("Controller","").replace(".js","")+"/"+a,controller[a]);
+                  }
+                });
+              });
+            });
+          }
 
           fs.readdirSync(controllerDir).forEach(file => {
              var fileExt = file.split(".");
@@ -167,12 +200,22 @@ module.exports = {
             var controller = require(controllerDir + f.fileName);
             var keys = Object.keys(controller);
             keys.forEach(a => {
-              router.get("/"+f.fileName.replace("Controller","").replace(".js","")+"/"+a,controller[a]);
+              if(a=="index"){
+                router.get("/"+f.fileName.replace("Controller","").replace(".js","")+"/",controller[a]);
+                router.post("/"+f.fileName.replace("Controller","").replace(".js","")+"/",controller[a]);
+              }else{
+                router.get("/"+f.fileName.replace("Controller","").replace(".js","")+"/"+a,controller[a]);
+                router.post("/"+f.fileName.replace("Controller","").replace(".js","")+"/"+a,controller[a]);
+              }
             });
           });
           
           app.use("/", router);
-
+          app.get('*', function (req, res) { res.render('./404.ejs'); });
+          app.use(logErrors);
+          app.use(errorHandler);
+          function logErrors (err, req, res, next) { console.error(err.stack); next(err); }
+          function errorHandler (err, req, res, next) {  res.status(500); res.render('./500.ejs', { error: err }); next(err); }
           server.listen(port,function(){
             log(chalk.green("/* ………………………………………………………………………………… */"));
             log(chalk.green(`        Server started! port: `+ port));
@@ -187,6 +230,7 @@ module.exports = {
           io.sockets.on('connection', function (socket) {
             if(settings.debug) log(chalk.greenBright("socket connected"));
             if(settings.debug) console.log(socket.handshake.query);
+            if(settings.debug) console.log(socket.handshake.session);
             if(socket.handshake){
               if(socket.handshake.headers){
                 if(socket.handshake.query){
@@ -231,19 +275,15 @@ module.exports = {
             }else{
               io.sockets.connected[socket.id].disconnect();
             }
-
             socket.on('disconnect', function (socket) {
               if(settings.debug) log(chalk.yellowBright("socket disconnected"));
             });
-
             socket.on('post', function (data) {
               if(settings.debug) console.log(data);
               if(data.hasOwnProperty("url") && data.hasOwnProperty("method")){
                 if(data.url && data.method){
                   var as = require("./controller/api/"+data.url+"Controller");
-                  socket.send = function(data){
-                    return data;
-                  };
+                  socket.send = function(data){ return data; };
                   io.isSocket = true;
                   data.data = as.new(io,socket);
                   io.to(socket.id).emit("post"+data.url,data);
@@ -254,15 +294,12 @@ module.exports = {
                 io.sockets.connected[socket.id].disconnect();
               }
             });
-
             socket.on('get', function (data) {
               if(settings.debug) console.log(data);
               if(data.hasOwnProperty("url") && data.hasOwnProperty("method")){
                 if(data.url && data.method){
                   var as = require("./controller/api/"+data.url+"Controller");
-                  socket.send = function(data){
-                    return data;
-                  };
+                  socket.send = function(data){ return data; };
                   io.isSocket = true;
                   data.data = as.new(io,socket);
                   io.to(socket.id).emit("post"+data.url,data);
@@ -274,14 +311,16 @@ module.exports = {
               }
             });
           });
-
-
           
           io.use((socket, next) => {
+            if(settings.session) sharedsession(session, {autoSave:true});
             let clientId = socket.handshake.headers['x-clientid'];
             if(settings.debug) log(`Socket Client ID : ${chalk.green(clientId)} `);
-            return next();
-            //return next(new Error('authentication error'));
+            if(clientId) {
+              return next();
+            }else{
+              io.sockets.connected[socket.id].disconnect();
+            }
           });
           
           process.stdin.on('keypress', function (ch, key) {
@@ -309,12 +348,7 @@ module.exports = {
             tty.setRawMode(true);
           }
           process.stdin.resume();
-    
-          process.on('exit', function(code) {
-            if(signalExit==2 || signalExit==3){
-                process.exit();
-            }
-          });
+          process.on('exit', function(code) { if(signalExit==2 || signalExit==3){ process.exit(); } });
           process.on('SIGINT', function(){
             signalExit++;
             if(signalExit==2 || signalExit==3){
@@ -324,10 +358,10 @@ module.exports = {
             }
           });
         }else{
-          log(chalk.red("Wrong json file!"));
+          log(chalk.red("Wrong js file!"));
         }
       }else{
-        log(chalk.red("Settings Json File Not Found!"));
+        log(chalk.red("Settings Js File Not Found!"));
       }
     } catch(err) {
       log(chalk.red(err));

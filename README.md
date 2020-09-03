@@ -15,9 +15,9 @@ This repo is simple web server using express-js. This is not stable version.
 ### Why ?
 
 - Pekmez is simple. Open source. 
-- MVC supported.
-- ORM supported.
-- Quick installion. Usage Simple.
+- MVC support.
+- ORM support.
+- Quick installation. Usage Simple.
 
 
 ### Changelog

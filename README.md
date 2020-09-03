@@ -18,6 +18,7 @@ This repo is simple web server using express-js. This is not stable version.
 - MVC support.
 - ORM support.
 - Quick installation. Usage Simple.
+- Easy way to use Multi Language Supporting.
 
 
 ### Changelog
@@ -27,6 +28,7 @@ This repo is simple web server using express-js. This is not stable version.
 - Added ssl support.
 - Added MVC support.
 - Added ORM support.
+- Added i18n ( Multi Language ) support.
 - Added error handling support.
 - Added session support.
 - Added CORS support.

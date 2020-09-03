@@ -38,6 +38,13 @@ var session , sharedsession;
 const controllerDir = './controller/api/';
 const modelDir = './controller/models/';
 var sequelize;
+const { I18n } = require('i18n')
+ 
+const i18n = new I18n({
+  locales: ['en', 'de'],
+  directory: path.join("./config/", 'locales')
+})
+
 
 module.exports = {
 

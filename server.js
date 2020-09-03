@@ -35,6 +35,9 @@ var compression = require('compression');
 var expiryDate = new Date(Date.now() + 60 * 60 * 1000);
 var server,io;
 var session , sharedsession;
+const controllerDir = './controller/api/';
+const modelDir = './controller/models/';
+var sequelize;
 
 module.exports = {
 
@@ -43,7 +46,7 @@ module.exports = {
       if(settings.dbConnection.enable){
         //checking database first
         if(settings.dbConnection.dbType=="sqlite"){
-          const sequelize = new Sequelize('sqlite::memory:');
+          sequelize = new Sequelize('sqlite::memory:');
           sequelize
           .authenticate()
           .then(() => {
@@ -148,12 +151,88 @@ module.exports = {
           router.get("/", function(req,res) {
             res.render('./index.ejs');
             setTimeout(function(){
-              console.log("greetings");
               io.emit("greetings", "Welcome Pekmez Simple Web Server");
             }, 500);
           });
 
-          const controllerDir = './controller/api/';
+          var fileModel = [];
+
+          fs.readdirSync(modelDir).forEach(file => {
+            var fileExt = file.split(".");
+            if(fileExt[1]=="js"){
+              var modelFile = require(modelDir +"/" + file);
+              var fileName = file.replace(".js","");
+              var modelVar = {};
+              console.log("len : " + Object.keys(modelFile.attributes).length);
+              console.log(modelFile.attributes);
+
+              if(Object.keys(modelFile.attributes).length>1){
+                for (const [key, value] of Object.entries(modelFile.attributes)) {
+                  console.log(key, value);
+                  var keys = Object.keys(modelFile.attributes[key]);
+                  console.log(keys);
+                  keys.forEach(a => {
+                    console.log(modelFile.attributes[key][a]);
+                    if(a=="type"){
+                      var converted = commons.convertModelDatatypes(modelFile.attributes[key][a],"");
+                      modelFile.attributes[key][a] = DataTypes[converted];
+                    }
+                    if(a=="required"){
+                      modelFile.attributes[key].allowNull = modelFile.attributes[key][a];
+                      delete modelFile.attributes[key][a];
+                    }
+                  });
+                }
+                console.log("modelFile >>>>>>>>>>>>>");
+                console.log(modelFile.attributes);
+                console.log("modelFile >>>>>>>>>>>>>");
+              }else{
+                var keys = Object.keys(modelFile.attributes);
+                console.log(keys);
+                var keyOne = modelFile.attributes[keys[0]];
+                console.log(keyOne);
+                var keysOne = Object.keys(keyOne);
+                console.log(keysOne);
+                keysOne.forEach(a => {
+                  console.log(modelFile.attributes[keys[0]][a]);
+                  if(a=="type"){
+                    var converted = commons.convertModelDatatypes(modelFile.attributes[keys[0]][a],"");
+                    modelFile.attributes[keys[0]][a] = DataTypes[converted];
+                    console.log("asdasd");
+                    console.log(DataTypes[converted]);
+                    console.log("asdasd");
+                  }
+                  if(a=="required"){
+                    modelFile.attributes[keys[0]].allowNull = modelFile.attributes[keys[0]][a];
+                    delete modelFile.attributes[keys[0]][a];
+                  }
+                });
+
+                console.log("modelFile >>>>>>>>>>>>>");
+                console.log(modelFile.attributes);
+                console.log("modelFile >>>>>>>>>>>>>");
+
+              }
+              
+              this[fileName] = sequelize.define(fileName, modelFile.attributes , {});
+
+              console.log("model test");
+              console.log(this[fileName] === sequelize.models[fileName]);
+              console.log("model test");
+              fileModel.push({fileName:file});
+
+            }
+          });
+          console.log(fileModel);
+
+          const project = this["Log"].findOne({ where: { logId: 'My Title' } });
+          if (project === null) {
+            console.log('Not found!');
+          } else {
+            console.log(project instanceof this["Log"]); // true
+            console.log(project.title); // 'My Title'
+          }
+
           var fileController = [];
 
           //adding sub dir into controller side
